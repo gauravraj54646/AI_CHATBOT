@@ -12,7 +12,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 const NewPrompt = ({ data }) => {
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
-  const [img, setImg] = useState({
+  const [img, setImg] = useState({   //image uploading
     isLoading: false,
     error: "",
     dbData: {},
@@ -126,7 +126,7 @@ const NewPrompt = ({ data }) => {
           urlEndpoint={import.meta.env.VITE_IMAGE_KIT_ENDPOINT}
           path={img.dbData?.filePath}
           width="380"
-          transformation={[{ width: 380 }]}
+          transformation={[{ width: 380 }]} //resize our image
         />
       )}
       {question && <div className="message user">{question}</div>}
