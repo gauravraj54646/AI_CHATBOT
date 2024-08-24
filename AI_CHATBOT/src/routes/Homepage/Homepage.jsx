@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import "./homepage.css";
+import "./Homepage.css";
 import { TypeAnimation } from "react-type-animation";
 import { useState } from "react";
 
@@ -13,7 +13,7 @@ const Homepage = () => {
         <h1>AI CHATBOT</h1>
         <h2>Supercharge your creativity and productivity</h2>
         <h3>
-          Lorem ipsum dolor sit, amet consectetur adipisicing elit. Placeat sint
+           Chat Ai  is devloped to update yourself and work you want.
           dolorem doloribus, architecto dolor.
         </h3>
         <Link to="/dashboard">Get Started</Link>
@@ -38,17 +38,17 @@ const Homepage = () => {
             <TypeAnimation
               sequence={[
                 // Same substring at the start will only be typed out once, initially
-                "Human:We produce food for Gaurav",
+                "Rohan: We produce food for Gaurav",
                 2000,
                 () => {
                   setTypingStatus("bot");
                 },
-                "Bot:We produce food for Priya",
+                "Bot: We produce food for Priya",
                 2000,
                 () => {
                   setTypingStatus("human2");
                 },
-                "Human2:We produce food for Prabhat",
+                "Janvi: We produce food for Prabhat",
                 2000,
                 () => {
                   setTypingStatus("bot");

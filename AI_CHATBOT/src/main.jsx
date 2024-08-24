@@ -15,7 +15,7 @@ const router = createBrowserRouter([
     element: <RootLayout />,
     children: [
       {
-        path: "/",
+        path: "/",     //home page
         element: <Homepage />,
       },
       {
@@ -26,6 +26,7 @@ const router = createBrowserRouter([
         path: "/sign-up/*",
         element: <SignUpPage />,
       },
+      //page 1 completed and page 2 started
       {
         element: <DashboardLayout />,
         children: [
