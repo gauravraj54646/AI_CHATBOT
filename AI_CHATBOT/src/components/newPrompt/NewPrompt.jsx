@@ -41,8 +41,9 @@ const NewPrompt = ({ data }) => {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: () => {
-      return fetch(`${import.meta.env.VITE_API_URL}/api/chats/${data._id}`, {
+    mutationFn:  () => {
+      // return fetch(`${import.meta.env.VITE_API_URL}/api/chats/${data._id}`, {
+      return fetch(`http://localhost:3000/api/chats/${data._id}`, {
         method: "PUT",
         credentials: "include",
         headers: {

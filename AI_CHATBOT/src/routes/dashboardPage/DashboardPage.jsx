@@ -4,13 +4,14 @@ import { useNavigate } from "react-router-dom";
 
 const DashboardPage = () => {
   const queryClient = useQueryClient();
-
+  
   const navigate = useNavigate();
-
+  
   const mutation = useMutation( {
-    mutationFn:  (text) => {
-      return fetch(`${import.meta.env.VITE_API_URL}/api/chats`, {
-        method: "POST",
+    mutationFn: async (text) => {
+      // return fetch(`${import.meta.env.VITE_API_URL}/api/chats`, {
+      return fetch(`http://localhost:3000/api/chats`, {
+      method: "POST",
         credentials: "include",
         headers: {
           "Content-Type": "application/json",

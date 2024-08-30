@@ -2,32 +2,39 @@ import express from "express";
 import cors from "cors";
 import path from "path";
 import url, { fileURLToPath } from "url";
-import ImageKit from "imagekit";
+ import ImageKit from "imagekit";
 import mongoose from "mongoose";
 import Chat from "./models/chat.js";
 import UserChats from "./models/userChats.js";
 import { ClerkExpressRequireAuth } from "@clerk/clerk-sdk-node";
+import dotenv from 'dotenv';
+import { config } from "process";
+
+
+dotenv.config();
 
 const port = process.env.PORT || 3000;
 const app = express();
+
+//  --env-file .env
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 app.use(
   cors({
-    origin: process.env.CLIENT_URL,
+    // origin: process.env.CLIENT_URL,
+    origin:"http:localhost:5173",
     credentials: true,
   })
 );
 
-app.use(express.json());   //for json file
-
+app.use(express.json()); //for json file
 
 //database connection
 const connect = async () => {
   try {
-    await mongoose.connect(process.env.MONGODB);
+    await mongoose.connect("mongodb+srv://gauravnitagartala653:3CsGFa2tKXxw9dmz@ecommerce-mern.jhsii8d.mongodb.net/?" );
     console.log("Connected to MongoDB");
   } catch (err) {
     console.log(err);
@@ -36,12 +43,19 @@ const connect = async () => {
 
 //#################################################################
 
+// const imagekit = new ImageKit({
+//   urlEndpoint: process.env.IMAGE_KIT_ENDPOINT,
+//   publicKey: process.env.IMAGE_KIT_PUBLIC_KEY,
+//   privateKey: process.env.IMAGE_KIT_PRIVATE_KEY,
+// });
+
+// var ImageKit = require("imagekit");
+
 const imagekit = new ImageKit({
   urlEndpoint: process.env.IMAGE_KIT_ENDPOINT,
-  publicKey: process.env.IMAGE_KIT_PUBLIC_KEY,
   privateKey: process.env.IMAGE_KIT_PRIVATE_KEY,
+  publicKey: process.env.IMAGE_KIT_PUBLIC_KEY,
 });
-
 
 
 app.get("/api/upload", (req, res) => {
@@ -49,80 +63,85 @@ app.get("/api/upload", (req, res) => {
   res.send(result);
 });
 
-
 //#################################################################
 
+app.post(
+  "/api/chats",
+  ClerkExpressRequireAuth(),
+  async (err, req, res, next) => {
+    const userId = req.auth.userId;
+    const { text } = req.body;
 
-app.post("/api/chats", ClerkExpressRequireAuth(), async (req, res) => {
-  const userId = req.auth.userId;
-  const { text } = req.body;
-
-  try {
-    // CREATE A NEW CHAT
-    const newChat = new Chat({
-      userId: userId,
-      history: [{ role: "user", parts: [{ text }] }],
-    });
-
-    const savedChat = await newChat.save();
-
-    // CHECK IF THE USERCHATS EXISTS
-    const userChats = await UserChats.find({ userId: userId });
-
-    // IF DOESN'T EXIST CREATE A NEW ONE AND ADD THE CHAT IN THE CHATS ARRAY
-    if (!userChats.length) {
-      const newUserChats = new UserChats({
+    try {
+      // CREATE A NEW CHAT
+      const newChat = new Chat({
         userId: userId,
-        chats: [
-          {
-            _id: savedChat._id,
-            title: text.substring(0, 40),
-          },
-        ],
+        history: [{ role: "user", parts: [{ text }] }],
       });
 
-      await newUserChats.save();
-    } else {
-      // IF EXISTS, PUSH THE CHAT TO THE EXISTING ARRAY
-      await UserChats.updateOne(
-        { userId: userId },
-        {
-          $push: {
-            chats: {
+      const savedChat = await newChat.save();
+
+      // CHECK IF THE USERCHATS EXISTS
+      const userChats = await UserChats.find({ userId: userId });
+
+      // IF DOESN'T EXIST CREATE A NEW ONE AND ADD THE CHAT IN THE CHATS ARRAY
+      if (!userChats.length) {
+        const newUserChats = new UserChats({
+          userId: userId,
+          chats: [
+            {
               _id: savedChat._id,
               title: text.substring(0, 40),
             },
-          },
-        }
-      );
+          ],
+        });
 
-      res.status(201).send(newChat._id);
+        await newUserChats.save();
+      } else {
+        // IF EXISTS, PUSH THE CHAT TO THE EXISTING ARRAY
+        await UserChats.updateOne(
+          { userId: userId },
+          {
+            $push: {
+              chats: {
+                _id: savedChat._id,
+                title: text.substring(0, 40),
+              },
+            },
+          }
+        );
+
+        res.status(201).send(newChat._id);
+      }
+    } catch (err) {
+      console.log(err);
+      res.status(500).send("Error while creating chat!");
     }
-  } catch (err) {
-    console.log(err);
-    res.status(500).send("Error while creating chat!");
   }
-});
+);
 
+//##########################################################################
 
-//#################################################################
 
 
 app.get("/api/userchats", ClerkExpressRequireAuth(), async (req, res) => {
   const userId = req.auth.userId;
 
   try {
-    const userChats = await UserChats.find({ userId });
+    const userChats = await UserChats.findOne({ userId });
 
-    res.status(200).send(userChats[0].chats);
+    if (userChats) {
+      res.status(200).send(userChats.chats);
+    } else {
+      res.status(404).send("No chats found for this user.");
+    }
   } catch (err) {
-    console.log(err);
-    res.status(500).send("Error while fetching userchats!");
+    console.error(err);
+    res.status(500).send("Error fetching user chats!");
   }
 });
 
-//#################################################################
-
+//###############################################################################
 
 app.get("/api/chats/:id", ClerkExpressRequireAuth(), async (req, res) => {
   const userId = req.auth.userId;
@@ -138,7 +157,6 @@ app.get("/api/chats/:id", ClerkExpressRequireAuth(), async (req, res) => {
 });
 
 //#################################################################
-
 
 app.put("/api/chats/:id", ClerkExpressRequireAuth(), async (req, res) => {
   const userId = req.auth.userId;
@@ -172,20 +190,20 @@ app.put("/api/chats/:id", ClerkExpressRequireAuth(), async (req, res) => {
 
 //#################################################################
 
-
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(401).send("Unauthenticated!");
 });
 
 // PRODUCTION
-app.use(express.static(path.join(__dirname, "../client/dist")));
+// app.use(express.static(path.join(__dirname, "../AI_CHATBOT/dist")));
 
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../client/dist", "index.html"));
-});
+// app.get("*", (req, res) => {
+//   res.sendFile(path.join(__dirname, "../AI_CHATBOT/dist", "index.html"));
+// });
 
-app.listen(port, () => {
+
+app.listen(3000, () => {
   connect();
   console.log("Server running on 3000");
 });
